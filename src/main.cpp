@@ -1,12 +1,10 @@
+#include "ChatServer.h"
+
 int main (int argc, char *argv[]) {
 
-    // socket
+    ChatServer server(8080);
 
-    // bind
-
-    // recvfrom
-
-    // sendto
+    server.runServer();
 
     return 0;
 }
