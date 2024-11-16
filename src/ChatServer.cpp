@@ -1,17 +1,21 @@
 #include "ChatServer.h"
+#include "client/Client.h"
 #include <arpa/inet.h>
 #include <iostream>
 #include <limits>
 #include <netinet/in.h>
 #include <stdexcept>
 #include <string>
+#include <sys/types.h>
 #include <sys/socket.h>
 #include <unistd.h>
 
 // socket + bind
 // prototype; use IPv4 cus why not
-ChatServer::ChatServer(uint16_t port) :
-    port(port), running(true)
+ChatServer::ChatServer(uint16_t port, size_t clientQueueSize) :
+    port(port), 
+    running(true),
+    clientQueueSize(clientQueueSize)
 {
     int re = 1, s;
 
@@ -51,32 +55,26 @@ ChatServer::ChatServer(uint16_t port) :
 void ChatServer::runServer() {
     
     // listen
-    if (listen(sockfd, 5) < 0) {
+    if (listen(sockfd, clientQueueSize) < 0) {
         throw std::runtime_error("Listening failed");
     }
 
-    // accept
-    // [!] TESTING OUT WITH A SINGLE CLIENT, WILL HAVE TO REWRITE ACCEPT AND SERVER LOOP
-    sockaddr_in clientAddr;
-    socklen_t clientAddrSize = sizeof(clientAddr);
-    int clientSockFd = accept(sockfd, (sockaddr*) &clientAddr, &clientAddrSize);
-    if (clientSockFd < 0) {
-        throw std::runtime_error("Accept client failed");
+    while (running) {
+        
+        // accept
+        sockaddr clientAddr;
+        socklen_t clientAddrSize;
+        int clientSockFd = accept(sockfd, &clientAddr, &clientAddrSize);
+    
+        // handle client here
+        Client client(clientSockFd);
+        std::string msg = client.getMessage();
+
+        if (!msg.empty()) {
+            std::cout << client.getClientSockFd() << ": " << msg << '\n';
+        }
     }
 
-    // client details
-    getpeername(clientSockFd, (sockaddr*) &clientAddr, &clientAddrSize);
-    char ip[INET_ADDRSTRLEN] = { 0 };
-    inet_ntop(clientAddr.sin_family, &clientAddr.sin_addr, ip, INET_ADDRSTRLEN);
-    int pport = ntohs(clientAddr.sin_port);
-    std::cout << "Established connection from " << ip << ": " << pport << " on socket " << clientSockFd << '\n';
-
-    sendToClient(clientSockFd, "Connection successful"); 
-    std::cout << readFromClient(clientSockFd) << '\n';
-    sendToClient(clientSockFd, "Good night!");
-    
-    // close
-    close(clientSockFd);
     close(sockfd);
 
     running = false;
