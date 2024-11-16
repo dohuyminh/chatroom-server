@@ -7,14 +7,25 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <string>
 
 class ChatServer {
 
 public:
     ChatServer(uint16_t port);
     void runServer();
+    void setRunning(bool running);
 
 private:
+
+    void displayClientMsg(int clientSockFd);
+    void sendMsg(int clientSockFd);
+
+    std::string readFromClient(int clientSockFd);
+    void sendToClient(int clientSockFd, const std::string& msg);
+
     uint16_t port;
     int sockfd;
+
+    bool running;
 };
