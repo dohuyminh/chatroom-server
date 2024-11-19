@@ -1,5 +1,5 @@
 #include "ChatServer.h"
-#include "client/Client.h"
+#include "Threads/ThreadPool.h"
 #include <arpa/inet.h>
 #include <iostream>
 #include <limits>
@@ -66,13 +66,16 @@ void ChatServer::runServer() {
         socklen_t clientAddrSize;
         int clientSockFd = accept(sockfd, &clientAddr, &clientAddrSize);
     
-        // handle client here
-        Client client(clientSockFd);
-        std::string msg = client.getMessage();
-
-        if (!msg.empty()) {
-            std::cout << client.getClientSockFd() << ": " << msg << '\n';
+        if (clientSockFd < 0) {
+            std::cerr << "Client acceptance failed\n";
+            continue;
         }
+
+        // handle client here
+        ThreadPool::request()
+            .addTask(
+                std::bind(&ChatServer::handleClient, this, clientSockFd)
+            );
     }
 
     close(sockfd);
@@ -80,54 +83,22 @@ void ChatServer::runServer() {
     running = false;
 }
 
-std::string ChatServer::readFromClient(int clientSockFd) {
+int ChatServer::handleClient(int clientSockFd) {
+
+    constexpr size_t BUFF_SIZE = 513;
     std::string msg;
-    char buff[513] = { 0 };
-    
-    int n = 0;
+    char buff[BUFF_SIZE] = { 0 };
+    int r = 0;
+
     do {
-        n = read(clientSockFd, buff, 512);
-        buff[n] = '\0';
+        r = read(clientSockFd, buff, BUFF_SIZE - 1);
+        buff[r] = 0;
         msg += buff;
-    } while (n == 512);
+    } while (r == BUFF_SIZE - 1);
+    
+    std::cout << "Client (" << clientSockFd << "): " << msg << '\n';
 
-    return msg;
-}
+    close(clientSockFd);
 
-void ChatServer::sendToClient(int clientSockFd, const std::string& msg) {
-    int n = write(clientSockFd, msg.c_str(), msg.size());
-    if (n < 0) {
-        throw std::runtime_error("Sending message to client " + std::to_string(clientSockFd) + " failed");    
-    } 
-}
-
-void ChatServer::displayClientMsg(int clientSockFd) {
-    while (running) {
-        std::string clientMsg = readFromClient(clientSockFd);
-        if (!clientMsg.empty()) {
-            std::cout << "Client: " << clientMsg << '\n';
-        }
-    }
-}
-
-void ChatServer::sendMsg(int clientSockFd) {
-    std::string cmd;
-    while (running) {
-        std::cout << "ChatServer $ ";
-        std::cin >> cmd; 
-
-        // clean things up
-        if (cmd == "send") {
-            std::string msg;
-            std::getline(std::cin, msg);
-            sendToClient(clientSockFd, msg);
-        }
-        else if (cmd == "shutdown") {
-            sendToClient(clientSockFd, "Server has shut down. Please close connection");
-            running = false;
-        }
-
-        // flush the std::cin so the new command won't have any trace of tne previous ones
-        std::cin.ignore(std::numeric_limits<std::streamsize>::max());
-    }
+    return 0;
 }

@@ -1,10 +1,10 @@
-include_directories(${chatroom-server_SOURCE_DIR}/src/client)
+include_directories(${chatroom-server_SOURCE_DIR}/src/Threads)
 
 add_executable(
     main
     main.cpp
     ChatServer.h 
     ChatServer.cpp
-    client/Client.h 
-    client/Client.cpp
+    Threads/ThreadPool.h
+    Threads/ThreadPool.cpp
 )

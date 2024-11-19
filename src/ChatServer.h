@@ -15,15 +15,10 @@ class ChatServer {
 public:
     ChatServer(uint16_t port, size_t clientQueueSize);
     void runServer();
-    void setRunning(bool running);
 
 private:
 
-    void displayClientMsg(int clientSockFd);
-    void sendMsg(int clientSockFd);
-
-    std::string readFromClient(int clientSockFd);
-    void sendToClient(int clientSockFd, const std::string& msg);
+    int handleClient(int clientSockFd);
 
     uint16_t port;
     size_t clientQueueSize;
