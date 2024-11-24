@@ -20,6 +20,11 @@ private:
 
     int handleClient(int clientSockFd);
 
+    class ClientsGateway {
+        uint16_t port;
+        
+    };
+
     uint16_t port;
     size_t clientQueueSize;
     int sockfd;
