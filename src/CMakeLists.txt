@@ -1,6 +1,5 @@
 # find MongoDB driver
 find_package(PkgConfig REQUIRED)
-pkg_check_modules(LIBMONGOCXX REQUIRED libmongocxx)
 
 # if any subdirectory is to be created, add them:
 # file(GLOB <subdirectory name>_HEADERS "<subdirectory name>/*.h")
@@ -24,12 +23,9 @@ add_executable(
     ${THREADS_SRC}
 )
 
-target_include_directories(main PRIVATE ${LIBMONGOCXX_INCLUDE_DIRS})
 target_link_libraries(
     main
     PRIVATE
     cpp_dotenv
-    ${LIBMONGOCXX_LIBRARIES}
 )
-target_compile_options(main PRIVATE ${LIBMONGOCXX_CFLAGS_OTHER})
 

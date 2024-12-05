@@ -1,21 +1,23 @@
 #include "ChatServer.h"
+#include "ServerState.h"
 #include "../Threads/ThreadPool.h"
 #include <arpa/inet.h>
 #include <iostream>
-#include <limits>
 #include <netinet/in.h>
 #include <stdexcept>
 #include <string>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <netdb.h>
 #include <unistd.h>
+
+namespace HTTPChatroomServer {
 
 // socket + bind
 // prototype; use IPv4 cus why not
-ChatServer::ChatServer(uint16_t port, size_t clientQueueSize) :
-    port(port), 
-    running(true),
-    clientQueueSize(clientQueueSize)
+ChatServer::ChatServer(uint16_t port, size_t connQueueSize) : 
+    connGateway(__ClientsGateway(connQueueSize)), 
+    port(port)
 {
     int re = 1, s;
 
@@ -41,7 +43,7 @@ ChatServer::ChatServer(uint16_t port, size_t clientQueueSize) :
     // bind
     // re-use port if possible
     if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &re, sizeof(int)) < 0) {
-        throw std::runtime_error("setsockopt failed");        
+        throw std::runtime_error("setsockopt failed");
     }
 
     if (bind(sockfd, res->ai_addr, res->ai_addrlen) < 0) {
@@ -49,56 +51,35 @@ ChatServer::ChatServer(uint16_t port, size_t clientQueueSize) :
     }
 
     freeaddrinfo(res);
+    connGateway.setServSockFd(sockfd);
 }
 
-// read + write + close
+// listen + read + write + close
 void ChatServer::runServer() {
+
+    // open server
+    ServerState::access().setRunning();
+
+    // open thread pool to execute task
+    ThreadPool::request().start();
     
-    // listen
-    if (listen(sockfd, clientQueueSize) < 0) {
-        throw std::runtime_error("Listening failed");
-    }
+    // open the server for client (listen)
+    connGateway.openGateway();
 
-    while (running) {
-        
-        // accept
-        sockaddr clientAddr;
-        socklen_t clientAddrSize;
-        int clientSockFd = accept(sockfd, &clientAddr, &clientAddrSize);
-    
-        if (clientSockFd < 0) {
-            std::cerr << "Client acceptance failed\n";
-            continue;
-        }
+    std::cout << "Server is now listening on port: " << port << '\n';
 
-        // handle client here
-        ThreadPool::request()
-            .addTask(
-                std::bind(&ChatServer::handleClient, this, clientSockFd)
-            );
-    }
-
-    close(sockfd);
-
-    running = false;
-}
-
-int ChatServer::handleClient(int clientSockFd) {
-
-    constexpr size_t BUFF_SIZE = 513;
-    std::string msg;
-    char buff[BUFF_SIZE] = { 0 };
-    int r = 0;
-
+    // main loop for gateway to handle connection
     do {
-        r = read(clientSockFd, buff, BUFF_SIZE - 1);
-        buff[r] = 0;
-        msg += buff;
-    } while (r == BUFF_SIZE - 1);
-    
-    std::cout << "Client (" << clientSockFd << "): " << msg << '\n';
+        
+    } while (ServerState::access().isRunning());
 
-    close(clientSockFd);
+    // close the server (close)
+    connGateway.closeGateway();
 
-    return 0;
+    // close thread pool when server closes
+    ThreadPool::request().stop();
+
 }
+
+}
+
