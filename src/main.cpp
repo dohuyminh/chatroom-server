@@ -30,6 +30,6 @@ void catchSignal() {
 }
 
 void handleSignal(int signum) {
-    std::cout << "Server shutdown\n";
+    std::cout << "Server closing down...\n";
     ServerState::access().setStop();
 }
