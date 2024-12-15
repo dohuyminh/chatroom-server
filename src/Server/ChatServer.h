@@ -11,6 +11,7 @@ class ChatServer {
 public:
     ChatServer(uint16_t port, size_t connQueueSize);
     void runServer();
+    void handleClient(int clientSockFd);
 
 private:
     __ClientsGateway connGateway;

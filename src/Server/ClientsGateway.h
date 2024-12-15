@@ -1,6 +1,8 @@
 #pragma once 
 
 #include <cstddef>
+#include <optional>
+#include <stack>
 
 namespace HTTPChatroomServer {
 
@@ -10,7 +12,7 @@ public:
     void setServSockFd(int servSockFd);
     void openGateway();
     void closeGateway();
-    void processConnection();
+    std::optional<int> processConnection(int timeout);
 
 private:
     void retainConnection(int clientSockFd);

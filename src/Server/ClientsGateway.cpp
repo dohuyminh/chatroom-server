@@ -3,6 +3,7 @@
 #include <stdexcept>
 #include <sys/socket.h>
 #include <unistd.h>
+#include <poll.h>
 
 namespace HTTPChatroomServer {
 
@@ -25,12 +26,31 @@ void __ClientsGateway::openGateway() {
     }
 }
 
+// accept
+
+
 // close
 void __ClientsGateway::closeGateway() {
     close(servSockFd);
 }
 
-void __ClientsGateway::processConnection() {
+std::optional<int> __ClientsGateway::processConnection(int timeout) {
+    
+    pollfd p = { 0 };
+    p.fd = servSockFd;
+    p.events = POLLIN;
+
+    int nEvents = poll(&p, 1, timeout);
+    if (nEvents == 0 || !(p.revents & POLLIN)) { return std::nullopt; }
+
+    sockaddr addr;
+    socklen_t addrSize = sizeof(addr);
+    int clientFd = accept(servSockFd, &addr, &addrSize);
+    if (clientFd < 0) {
+        throw std::runtime_error("Accepting client failed");
+    }
+
+    return clientFd;
     
 }
 

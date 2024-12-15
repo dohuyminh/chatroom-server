@@ -69,9 +69,11 @@ void ChatServer::runServer() {
     std::cout << "Server is now listening on port: " << port << '\n';
 
     // main loop for gateway to handle connection
-    do {
+    while (ServerState::access().isRunning()) {
+
+            
         
-    } while (ServerState::access().isRunning());
+    }
 
     // close the server (close)
     connGateway.closeGateway();
@@ -79,6 +81,43 @@ void ChatServer::runServer() {
     // close thread pool when server closes
     ThreadPool::request().stop();
 
+}
+
+void ChatServer::handleClient(int clientSockFd) {
+
+    // a 512KB buffer to store each request
+    constexpr size_t requestBuffSize = 65536;
+    char requestBuff[ requestBuffSize ] = { 0 };
+
+    // HTTP/1.1 supports pipelining; got to implement that
+    bool connDone = false;
+    while (!connDone) {
+
+        // read HTTP requst
+        
+        ssize_t readBytes = read(clientSockFd, requestBuff, requestBuffSize);
+        // error reading; closing connection
+        if (readBytes == -1) {
+            std::cerr << "Reading request from client " << clientSockFd << " failed\n";
+            break;
+        } 
+        // client has closed connection; closing now
+        else if (readBytes == 0) { break; }
+
+        // parse HTTP reqest
+
+
+        // execute request
+
+        // send response to client 
+
+    }
+
+    // close client's connection
+    if (close(clientSockFd) == -1) {
+        std::cerr << "close\n";
+    }
+    
 }
 
 }
