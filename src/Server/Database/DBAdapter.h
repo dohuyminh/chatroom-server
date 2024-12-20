@@ -9,7 +9,7 @@
 
 namespace DB {
 
-typedef std::pair< HTTP::ResponseCode, std::optional<std::string> > Response;
+typedef std::pair< HTTP::Constants::ResponseCode, std::optional<std::string> > Response;
 
 class DBAdapter {
 public:
