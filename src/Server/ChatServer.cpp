@@ -71,8 +71,38 @@ void ChatServer::runServer() {
     // main loop for gateway to handle connection
     while (ServerState::access().isRunning()) {
 
-            
+        std::optional<int> clientSockFd;
+        try {
+            clientSockFd = connGateway.processConnection(1000);
+        } catch (std::runtime_error const&) { 
+            continue;
+        }
         
+        int client = clientSockFd.value_or(-1);
+        auto stuff = [client]() {
+            if (client == -1) return;
+            
+            std::string msg;
+
+            // allocate 512KB for reading request
+            constexpr ssize_t BUFFSIZE = 65536;
+            char buff [ BUFFSIZE ] = { 0 };
+            ssize_t r = read(client, buff, BUFFSIZE - 1);
+
+            if (r <= 0) {
+                close(client);
+                return;
+            }
+
+            buff[r] = 0;
+            msg += buff;
+
+            std::cout << "Client " << client << ":\n" << msg << '\n';
+
+            close(client);
+        };
+
+        ThreadPool::request().addTask(stuff);
     }
 
     // close the server (close)
