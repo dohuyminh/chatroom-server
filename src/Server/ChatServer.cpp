@@ -1,6 +1,8 @@
 #include "ChatServer.h"
 #include "ServerState.h"
-#include "../Threads/ThreadPool.h"
+#include "ThreadPool.h"
+#include "HTTP.h"
+
 #include <arpa/inet.h>
 #include <iostream>
 #include <netinet/in.h>
@@ -97,7 +99,9 @@ void ChatServer::runServer() {
             buff[r] = 0;
             msg += buff;
 
-            std::cout << "Client " << client << ":\n" << msg << '\n';
+            std::cout << "Client (" << client << "):\n";
+            std::cout << msg << '\n';
+            auto lmao = HTTP::parseRequest(msg);
 
             close(client);
         };
@@ -125,7 +129,7 @@ void ChatServer::handleClient(int clientSockFd) {
 
         // read HTTP requst
         
-        ssize_t readBytes = read(clientSockFd, requestBuff, requestBuffSize);
+        ssize_t readBytes = read(clientSockFd, requestBuff, requestBuffSize - 1);
         // error reading; closing connection
         if (readBytes == -1) {
             std::cerr << "Reading request from client " << clientSockFd << " failed\n";
@@ -135,7 +139,7 @@ void ChatServer::handleClient(int clientSockFd) {
         else if (readBytes == 0) { break; }
 
         // parse HTTP reqest
-
+        // HTTP::Request request = HTTP::parseRequest(requestBuff);
 
         // execute request
 

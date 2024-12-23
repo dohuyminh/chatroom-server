@@ -1,5 +1,8 @@
 #include "Server/HTTPChatroomServer.h"
 
+#include "absl/strings/cord_buffer.h"
+#include "re2/re2.h"
+
 #include <thread>
 #include <csignal>
 #include <iostream>
@@ -20,6 +23,9 @@ int main (int argc, char *argv[]) {
     catchSignal();
 
     serverThread.join();
+
+    const auto match = RE2::FullMatch("hello", "h.*o");
+    std::cout << match << '\n';
 
     return 0;
 }

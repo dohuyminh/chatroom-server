@@ -9,8 +9,7 @@ RUN apt-get update && apt-get install -y \
     build-essential \
     cmake
 
-# install and configure mongocxx
-# ...
+# 
 
 # lib code 
 COPY lib lib/

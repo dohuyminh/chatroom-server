@@ -3,7 +3,7 @@
 namespace HTTP {
 namespace Constants {
 
-    constexpr char* accounts = "/accounts";
+    const char* accounts = "/accounts";
 
 }
 }

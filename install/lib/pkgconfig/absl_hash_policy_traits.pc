@@ -1,0 +1,12 @@
+prefix=/home/hminhdo/Desktop/coding-stuffs/chatroom-server/install
+exec_prefix=${prefix}
+libdir=/home/hminhdo/Desktop/coding-stuffs/chatroom-server/install/lib
+includedir=/home/hminhdo/Desktop/coding-stuffs/chatroom-server/install/include
+
+Name: absl_hash_policy_traits
+Description: Abseil hash_policy_traits library
+URL: https://abseil.io/
+Version: head
+Requires: absl_common_policy_traits = head, absl_meta = head
+Libs: -L${libdir}  
+Cflags: -I${includedir} -DNOMINMAX
