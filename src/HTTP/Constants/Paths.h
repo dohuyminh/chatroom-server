@@ -3,7 +3,9 @@
 namespace HTTP {
 namespace Constants {
 
-    const char* accounts = "/accounts";
+enum class Resource {
+    accounts
+};
 
 }
 }

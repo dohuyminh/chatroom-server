@@ -1,3 +1,3 @@
 #pragma once
 
-#include "MongoDBGateway.h"
+#include "DBAdapter.h"

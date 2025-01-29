@@ -81,32 +81,8 @@ void ChatServer::runServer() {
         }
         
         int client = clientSockFd.value_or(-1);
-        auto stuff = [client]() {
-            if (client == -1) return;
-            
-            std::string msg;
 
-            // allocate 512KB for reading request
-            constexpr ssize_t BUFFSIZE = 65536;
-            char buff [ BUFFSIZE ] = { 0 };
-            ssize_t r = read(client, buff, BUFFSIZE - 1);
-
-            if (r <= 0) {
-                close(client);
-                return;
-            }
-
-            buff[r] = 0;
-            msg += buff;
-
-            std::cout << "Client (" << client << "):\n";
-            std::cout << msg << '\n';
-            auto lmao = HTTP::parseRequest(msg);
-
-            close(client);
-        };
-
-        ThreadPool::request().addTask(stuff);
+        ThreadPool::request().addTask(std::bind(&ChatServer::handleClient, this, client));
     }
 
     // close the server (close)
@@ -119,8 +95,10 @@ void ChatServer::runServer() {
 
 void ChatServer::handleClient(int clientSockFd) {
 
+    if (clientSockFd == -1) return;
+
     // a 512KB buffer to store each request
-    constexpr size_t requestBuffSize = 65536;
+    constexpr size_t requestBuffSize = 65537;
     char requestBuff[ requestBuffSize ] = { 0 };
 
     // HTTP/1.1 supports pipelining; got to implement that
@@ -128,8 +106,7 @@ void ChatServer::handleClient(int clientSockFd) {
     while (!connDone) {
 
         // read HTTP requst
-        
-        ssize_t readBytes = read(clientSockFd, requestBuff, requestBuffSize - 1);
+        ssize_t readBytes = read(clientSockFd, requestBuff, requestBuffSize);
         // error reading; closing connection
         if (readBytes == -1) {
             std::cerr << "Reading request from client " << clientSockFd << " failed\n";
@@ -138,13 +115,31 @@ void ChatServer::handleClient(int clientSockFd) {
         // client has closed connection; closing now
         else if (readBytes == 0) { break; }
 
+        // if the client's request is bigger than 512KB, send response with status 413
+        else if (readBytes == requestBuffSize) {
+            
+        }
+
         // parse HTTP reqest
-        // HTTP::Request request = HTTP::parseRequest(requestBuff);
+        std::optional< HTTP::Request > extract = HTTP::parseRequest(requestBuff);
 
+        if (!extract.has_value()) {
+            std::string response = "HTTP/1.1 400 Bad Request\r\nContent-Type: application/json\r\nContent-Length: 19\r\n\r\n{\n\t\"lmao\": \"yeet\"\n}";
+            if (write(clientSockFd, response.c_str(), response.size()) == -1) {
+                std::cerr << "Sending response to client " << clientSockFd << " failed\n";
+            }
+            continue;
+        }
+
+        HTTP::Request& request = extract.value(); 
+        
         // execute request
+        // send request to         
 
-        // send response to client 
-
+        // the client is now done; closing socket 
+        if (request.Headers.count("Connection") && request.Headers["Connection"] == "close") {
+            break;
+        }
     }
 
     // close client's connection

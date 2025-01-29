@@ -13,7 +13,6 @@ target_sources(
         ${CMAKE_CURRENT_LIST_DIR}/HTTPChatroomServer.h
 )
 
-add_subdirectory(HTTP)
 add_subdirectory(Threads)
 
 target_link_libraries(
@@ -24,6 +23,7 @@ target_link_libraries(
 )
 
 target_include_directories(
-    Server PUBLIC 
-    ${CMAKE_CURRENT_LIST_DIR}
+    Server 
+    PUBLIC 
+        ${CMAKE_CURRENT_LIST_DIR}
 )

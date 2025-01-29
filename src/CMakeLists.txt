@@ -5,16 +5,13 @@ find_package(PkgConfig REQUIRED)
 add_executable(
     main
     main.cpp
-    # ${SERVER_HEADERS}
-    # ${SERVER_SRC}
-    # ${THREADS_HEEADERS}
-    # ${THREADS_SRC}
 )
 
 add_subdirectory(Server)
+add_subdirectory(HTTP)
 
-find_package(absl REQUIRED)
-find_package(re2 REQUIRED)
+# find_package(absl REQUIRED)
+# find_package(re2 REQUIRED)
 
 target_link_libraries(
     main
@@ -23,7 +20,6 @@ target_link_libraries(
 
     # 3rd party libraries
     cpp_dotenv
-    re2::re2
 
     # source code 
     Server

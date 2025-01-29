@@ -1,18 +1,20 @@
 #include "Server/HTTPChatroomServer.h"
 
-#include "absl/strings/cord_buffer.h"
-#include "re2/re2.h"
-
+#include "dotenv.h"
 #include <thread>
 #include <csignal>
 #include <iostream>
 
 using namespace HTTPChatroomServer;
+using namespace dotenv;
 
 void catchSignal();
 void handleSignal(int signum);
 
 int main (int argc, char *argv[]) {
+
+    // read values from .env
+    env.load_dotenv("../.env", false, true);
 
     ChatServer server(8080, 100);
     
@@ -23,9 +25,6 @@ int main (int argc, char *argv[]) {
     catchSignal();
 
     serverThread.join();
-
-    const auto match = RE2::FullMatch("hello", "h.*o");
-    std::cout << match << '\n';
 
     return 0;
 }
