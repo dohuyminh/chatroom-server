@@ -1,6 +1,5 @@
 #include "HTTPParser.h"
 
-#include <regex>
 #include <iostream>
 #include <re2/re2.h>
 

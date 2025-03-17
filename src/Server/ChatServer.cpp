@@ -107,11 +107,13 @@ void ChatServer::handleClient(int clientSockFd) {
 
         // read HTTP requst
         ssize_t readBytes = read(clientSockFd, requestBuff, requestBuffSize);
+        
         // error reading; closing connection
         if (readBytes == -1) {
             std::cerr << "Reading request from client " << clientSockFd << " failed\n";
             break;
         } 
+        
         // client has closed connection; closing now
         else if (readBytes == 0) { break; }
 
@@ -134,7 +136,7 @@ void ChatServer::handleClient(int clientSockFd) {
         HTTP::Request& request = extract.value(); 
         
         // execute request
-        // send request to         
+        // send request to the API         
 
         // the client is now done; closing socket 
         if (request.Headers.count("Connection") && request.Headers["Connection"] == "close") {
